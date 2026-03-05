@@ -1,7 +1,7 @@
 import torch
 import random
 
-
+# 创造数据集
 def create_data(w, b, num_examples):
     X = torch.normal(0, 1, (num_examples, len(w)))
     y = torch.matmul(X, w) + b
