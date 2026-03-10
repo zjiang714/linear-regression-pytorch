@@ -20,9 +20,10 @@ def data_loader(batch_size, features, labels):
         yield features[batch_indices], labels[batch_indices]
 """
 
-
+"""
 def linreg(X, w, b):
     return torch.matmul(X, w) + b
+"""
 
 
 def squared_loss(y_hat, y):

@@ -1,11 +1,8 @@
 import random
-from pyexpat import features
-
+# 删除了 pyexpat features 和 scipy y1 的误导入，避免变量名冲突
 from d2l import torch as d2l
 import matplotlib.pyplot as plt
 import torch
-from scipy.special.cython_special import y1
-
 
 # 1、生成数据
 def synthetic_data(w, b, num_examples):
@@ -18,16 +15,13 @@ def synthetic_data(w, b, num_examples):
     print("生成的y1.reshape是:",y1.reshape(-1,1))
     return X, y1.reshape((-1, 1))                       # reshape是改变矩阵的形状，具体可参考 Typora 的线性回归从0开始
 
-
-
 true_w = torch.tensor([2.0, -3.4])                 # w权重有可能是一个向量。
 true_b = 4.2
 
-trian_features, train_labels = synthetic_data(true_w, true_b, 10)
-print('最终trian_features的数据是：',trian_features)
-print('最终train_labels的数据是',train_labels)
-
-
+# 修正了变量名拼写，统一使用 features 和 labels
+features, labels = synthetic_data(true_w, true_b, 1000)
+print('最终features的数据是：', features)
+print('最终labels的数据是', labels)
 
 # 2、定义一个data_iter函数来读取小批量，该函数接收批量大小、特征矩阵和标签向量作为输入，生成大小为batch_size的小批量
 def data_iter(batch_size, train_features, train_labels):
@@ -64,11 +58,9 @@ def data_iter(batch_size, train_features, train_labels):
     :return:
     """
     num_examples = len(train_features)
-    # print('num_examples的值是：',num_examples)
     indices = list(range(num_examples))
-    # print('indices的值是：',indices)
     # 这些样本是随即读取的，没有特定顺序
-    # random.shuffle(indices)
+    random.shuffle(indices) # 取消了这里的注释，训练通常需要打乱顺序
     # 每一次从0开始，到num_example,跳过batch_size个大小
     for i in range(0, num_examples, batch_size):
         batch_indices = torch.tensor(indices[i:min(i + batch_size, num_examples)])
@@ -76,7 +68,47 @@ def data_iter(batch_size, train_features, train_labels):
 
 batch_size = 10
 
-for X, y in data_iter(batch_size, trian_features, train_labels):
+# 测试迭代器
+for X, y in data_iter(batch_size, features, labels):
+    print("--- 迭代器测试输出 ---")
     print(X, '\n', y, '\n')
     break
 
+# 定义初始化模型参数
+w = torch.normal(0, 0.01, size=(2, 1), requires_grad=True)
+b = torch.zeros(1, requires_grad=True) # 确保这里是 1 而不是 0
+
+# 定义初始化模型
+def linreg(X, w, b):
+    return torch.matmul(X, w) + b
+
+# 定义损失函数
+def squared_loss(y_hat, y):
+    """均方损失"""
+    return (y_hat - y.reshape(y_hat.shape)) ** 2 / 2
+
+# 定义优化算法，更新的时候不参与梯度计算
+def sgd(params, lr, batch_size):
+    """小批量随机梯度下降"""
+    with torch.no_grad():
+        for param in params:
+            param -= lr * param.grad / batch_size
+            param.grad.zero_()                  # 参数梯度归零，是为了让就的参数梯度不影响新的参数梯度。
+
+# 训练的过程
+lr = 0.025                                       #学习率
+num_epochs = 3                                  # 把整个数据扫3遍
+net = linreg                                    # 从这里开始net就代表了初始化模型函数
+loss = squared_loss                             # 从这里开始loss就代表了损失函数
+
+for epoch in range(num_epochs):
+    # 修正了变量名为 features 和 labels
+    for X, y in data_iter(batch_size, features, labels):
+        l = loss(net(X, w, b), y)  # X和y的小批量损失
+        # 因为l形状是(batch_size,1)，而不是一个标量。l中的所有元素被加到一起，
+        # 并以此计算关于[w,b]的梯度
+        l.sum().backward()
+        sgd([w, b], lr, batch_size)  # 使用参数的梯度更新参数
+    with torch.no_grad():
+        train_l = loss(net(features, w, b), labels)
+        print(f'epoch {epoch + 1}, loss {float(train_l.mean()):f}')
