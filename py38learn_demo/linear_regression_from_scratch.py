@@ -67,13 +67,6 @@ def data_iter(batch_size, train_features, train_labels):
         yield train_features[batch_indices], train_labels[batch_indices]
 
 batch_size = 10
-
-# 测试迭代器
-for X, y in data_iter(batch_size, features, labels):
-    print("--- 迭代器测试输出 ---")
-    print(X, '\n', y, '\n')
-    break
-
 # 定义初始化模型参数
 w = torch.normal(0, 0.01, size=(2, 1), requires_grad=True)
 b = torch.zeros(1, requires_grad=True) # 确保这里是 1 而不是 0
