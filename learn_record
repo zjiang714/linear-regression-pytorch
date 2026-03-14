@@ -48,6 +48,12 @@
 
 
 
+
+
+
+
+
+
 **问**：features, labels = synthetic_data(true_w, true_b, 1000)这一行代码生成了1000份样本对吗？但是为什么要根据真实的true_w和true_b来生成样本呢？ 
 
 **答**：**如果没有 `true_w` 和 `true_b` 作为“造数”的依据，我们就没有“标准答案”来评价模型学得好不好了。**
@@ -101,11 +107,9 @@
 
 
 
-**问**：那就是与真实的true_w和true_b数据相差很大，但是依旧可以用features, labels =  synthetic_data(true_w, true_b, 1000)来生成1000个样本，但是需要修改y1 = y +  torch.normal(0, 0.01, y.shape)中的0.01那个噪声点？
+**问**：那就是与真实的true_w和true_b数据相差很大，但是依旧可以用features, labels =  synthetic_data(true_w, true_b, 1000)来生成1000个样本，但是需要修改y1 = y +  torch.normal(0, 0.01, y.shape)中的0.01那个噪声点？还能用这行代码生成吗？
 
-**答**：2. 还能用这行代码生成吗？
-
-**可以。** 你只需要调整代码中那个代表“人间烟火”的**噪声项**即可。
+答：**可以。** 你只需要调整代码中那个代表“人间烟火”的**噪声项**即可。
 
 在你现在的代码中： `y1 = y + torch.normal(0, 0.01, y.shape)`
 
