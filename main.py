@@ -1,9 +1,4 @@
-import torch
-
-
-from py38learn_demo.read_data_set import read_data_set
-from py38learn_demo.read_data_set import create_data
-
+from py38learn_demo.L1_Regression.read_data_set import read_data_set
 
 # 按装订区域中的绿色按钮以运行脚本。
 if __name__ == '__main__':
