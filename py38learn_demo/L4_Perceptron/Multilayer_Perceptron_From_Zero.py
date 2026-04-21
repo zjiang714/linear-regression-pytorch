@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from d2l import torch as d2l
 
-from py38learn_demo.L1_Regression.SoftMax_Regression import train_ch3
+from py38learn_demo.L3_Regression.SoftMax_Regression import train_ch3
 
 # 下载图片数据集
 batch_size = 256
