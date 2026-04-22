@@ -35,7 +35,9 @@ def train(lambd):
         for X, y in train_iter:
             # 增加了L2范数惩罚项，
             # 广播机制使l2_penalty(w)成为一个长度为batch_size的向量
-            l = loss(net(X), y) + lambd * l2_penalty(w)
+            l = loss(net(X), y) + lambd * l2_penalty(w)  # 权重衰退的直接用法，lambd就是权重的具体值，
+                                                         # 通过修改 lambd 的大小来告诉模型：“我有多在意权重的大小”
+                                                         # w 的更新是一个“自驱动”的过程
             l.sum().backward()
             d2l.sgd([w, b], lr, batch_size)
         if (epoch + 1) % 5 == 0:

@@ -68,7 +68,7 @@ net = nn.Sequential(nn.Flatten(),
         nn.Linear(256, 256),
         nn.ReLU(),
         # 在第二个全连接层之后添加一个dropout层
-        nn.Dropout(dropout2),
+        nn.Dropout(dropout2),   # 暂退法的直接用法，定义好dropout2的具体参数
         nn.Linear(256, 10))
 
 def init_weights(m):
