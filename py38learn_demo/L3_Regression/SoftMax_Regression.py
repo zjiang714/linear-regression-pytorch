@@ -1,3 +1,5 @@
+# softmax回归，本质上是一个“单层”模型，可以把它看作是线性回归向多分类任务的自然延伸
+
 import torch
 from torch import nn
 from IPython import display
