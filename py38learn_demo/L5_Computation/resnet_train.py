@@ -83,7 +83,7 @@ def train():
     ])
 
     # 加载 CIFAR10
-    train_set=datasets.CIFAR10(root='./data',train=True,download=True,transform=transform_train)
+    train_set=datasets.CIFAR10(root='./data',train=True,download=False,transform=transform_train)
 
     # DataLoader
     train_loader=DataLoader(train_set,batch_size=1024,shuffle=True,num_workers=4,pin_memory=True,persistent_workers=True,
