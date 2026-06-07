@@ -13,7 +13,7 @@ class LeNet5(nn.Module):
         # ---- 卷积块：提取空间特征 ----
         # 卷积：用可学习的卷积核扫描图像，提取局部模式（边缘、纹理等）
         self.conv1 = nn.Conv2d(1, 6, kernel_size=5, padding=2)   # (1,28,28) → (6,28,28)
-        self.pool1 = nn.AvgPool2d(kernel_size=2, stride=2)       # 池化：下采样，降低分辨率、减少计算量
+        self.pool1 = nn.AvgPool2d(kernel_size=2, stride=2)       # 池化（汇聚层）：下采样，降低分辨率、减少计算量
         self.conv2 = nn.Conv2d(6, 16, kernel_size=5)             # (6,14,14) → (16,10,10)
         self.pool2 = nn.AvgPool2d(kernel_size=2, stride=2)       # (16,10,10) → (16,5,5)
         # ---- 全连接分类块：将特征映射到类别 ----
@@ -28,11 +28,11 @@ class LeNet5(nn.Module):
     def _init_weights(self, m):
         if type(m) == nn.Linear or type(m) == nn.Conv2d:
             nn.init.xavier_uniform_(m.weight)
-
+    #前向传播
     def forward(self, x):
         # 卷积块
         x = self.conv1(x); x = torch.sigmoid(x)
-        x = self.pool1(x)
+        x = self.pool1(x)                                         # 池化层就是汇聚层
         x = self.conv2(x); x = torch.sigmoid(x)
         x = self.pool2(x)
         # 全连接块
@@ -67,7 +67,7 @@ def evaluate_accuracy_gpu(net, data_iter, device=None):
     return metric[0] / metric[1]  # 准确率 = 总正确数 / 总样本数
 
 
-#@save
+
 def train_ch6(net, train_iter, test_iter, num_epochs, lr, device):
     """用GPU训练模型"""
     

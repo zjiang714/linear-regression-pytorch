@@ -1,0 +1,128 @@
+# 📐 图像卷积的过程
+
+---
+
+## 第一步：图片进厂，强行整容（Resize 预处理）
+
+将 28×28 像素的小方块，强行拉伸了 64 倍，变成 224×224 的大矩阵：
+
+```python
+transform = transforms.Compose([
+    transforms.Resize(224),   # 🔴 图片在这里被强行拉伸变大
+    transforms.ToTensor()     # 🔴 像素在这里变成 0~1 的数字向量
+])
+```
+
+---
+
+## 第二步：图片通电，大刀阔斧切片（Features 块的前半段）
+
+整容后的图片正式被推上了履带。它迎面撞上了 **96 个巨大的 11×11 的滤镜**（第一层卷积）。
+这些滤镜在它身上疯狂扫过，由于步长很大（每跨一步就是 4 个像素），图片被切得稀碎。
+扫完之后，原图消失了，取而代之的是 **96 张 54×54 的"线条草图"**：
+
+```python
+# 🔴 图片在这里被切成 96 张草图
+nn.Conv2d(1, 96, kernel_size=11, stride=4, padding=1),
+nn.ReLU(),
+nn.MaxPool2d(kernel_size=3, stride=2),    # 🔴 这里完成第一次暴瘦
+
+# 🔴 细节深化，变成 256 张更小的局部图
+nn.Conv2d(96, 256, kernel_size=5, padding=2),
+nn.ReLU(),
+nn.MaxPool2d(kernel_size=3, stride=2),
+```
+
+---
+
+## 第三步：高级逻辑脑补，榨干最后一点多余体积
+
+走完这三层，经历最后一次最大池化，图片迎来了它在卷积大车间的终点：**256 张只有 5×5 像素的终极概念图**：
+
+```python
+# 🔴 连续三层不瘦身、只做脑补的高级组合
+nn.Conv2d(256, 384, kernel_size=3, padding=1), nn.ReLU(),
+nn.Conv2d(384, 384, kernel_size=3, padding=1), nn.ReLU(),
+nn.Conv2d(384, 256, kernel_size=3, padding=1), nn.ReLU(),
+# 🔴 卷积车间的最后一关，压榨成 5×5
+nn.MaxPool2d(kernel_size=3, stride=2)
+```
+
+---
+
+## 第四步：方块被"拍扁拉直"，进入数字脑风暴（Flatten 与 Classifier 前段）
+
+在进入最终决策室前，它被一块叫 `Flatten` 的大板子"啪"的一声拍成了一根平平整整、拥有 **6400 个数字的超长一维向量**。
+
+这根 6400 维的细长数字链，立刻被拉进了拥有 **4096 个神经元的超级大脑**（全连接层）里。每一个数字都通过密密麻麻的传导线和全连接节点进行复杂的加权运算。在训练时，为了防止大家作弊死记硬背，还会有 **50% 的传导线被随机掐断（Dropout）**：
+
+```python
+self.flatten = nn.Flatten()   # 🔴 3D 方块在这里被拍扁拉直成一根线
+
+# 🔴 6400 个特征进入超级大脑进行综合思考，并随机掐断线（Dropout）
+nn.Linear(256 * 5 * 5, 4096),
+nn.ReLU(),
+nn.Dropout(p=0.5),
+nn.Linear(4096, 4096),
+nn.ReLU(),
+nn.Dropout(p=0.5),
+```
+
+---
+
+## 第五步：终极宣判，得分最高的胜出（Classifier 尾段）
+
+```python
+nn.Linear(4096, 10)   # 🔴 4096 个想法收束成 10 个箱子的得分
+```
+
+---
+
+## 📊 经典网络对比
+
+| 对比维度 | LeNet-5 (1998) | AlexNet (2012) | 为什么这么做？（核心逻辑） |
+|---|---|---|---|
+| **胃口大小（输入）** | 32×32（小图） | 224×224（大图） | 图像分辨率越高，包含的局部特征越丰富 |
+| **大脑深度（层数）** | 5 层（3 卷积 + 2 全连接） | 8 层（5 卷积 + 3 全连接） | 网络越深，越能通过连续卷积"脑补"出高级语义逻辑 |
+| **视野厚度（通道）** | 最大只有 16 个通道 | 最大飙升到 384 个通道 | 面对复杂的彩色大图，需要几百个不同分工的通道同时抓取线索 |
+| **终极武器（技术）** | 无 | ReLU 激活、Dropout、Xavier 初始化 | AlexNet 的灵魂。没有这三者，大网络刚开局就会梯度死掉，或者陷入死记硬背（过拟合） |
+
+---
+
+## 🧱 VGG 块
+
+```python
+def vgg_block(num_convs, in_channels, out_channels):
+    """
+    Args:
+        num_convs (int):     块内卷积层的数量
+        in_channels (int):   输入通道数
+        out_channels (int):  输出通道数
+    """
+    layers = []
+    for i in range(num_convs):
+        # 第一层卷积负责改变通道数，后续的卷积通道数保持不变
+        layers.append(nn.Conv2d(in_channels if i == 0 else out_channels,
+                                out_channels,
+                                kernel_size=3,
+                                padding=1))
+        layers.append(nn.ReLU(inplace=True))
+
+    # 每个 VGG 块最后连接一个 2×2 的最大池化层，高宽减半
+    layers.append(nn.MaxPool2d(kernel_size=2, stride=2))
+
+    return nn.Sequential(*layers)
+```
+
+---
+
+## 📝 当前卷积使用频率
+
+1. 深度可分离卷积
+2. ResNet 殘差块：它的核心是在卷积层旁边加了一条“高速公路”（跳跃连接/Skip Connection），让输入x可以直接加到输出上：text{Output} = f(x) + x。
+3. ConvNeXt 块 (现代化的 7*7卷积)
+
+
+
+
+
