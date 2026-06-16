@@ -150,7 +150,6 @@ def train_ch6(net, train_iter, test_iter, num_epochs, lr, device):
 """1、生成数据"""
 DATA_ROOT = "/home/zjianglinux/PycharmProjects/py38_dep_ln_code/py38learn_demo/data"
 
-# 核心不同点：FashionMNIST 原图是 28x28，AlexNet 必须通过 Resize 放大到 224x224 才能喂进去
 transform = transforms.Compose([
     transforms.Resize(224),
     transforms.ToTensor()
@@ -159,11 +158,9 @@ transform = transforms.Compose([
 train_dataset = datasets.FashionMNIST(root=DATA_ROOT, train=True, transform=transform, download=False)
 test_dataset = datasets.FashionMNIST(root=DATA_ROOT, train=False, transform=transform, download=False)
 
-# 提示：因为图片放大到了 224x224，显存占用暴增，如果 GPU 爆显存，请将 batch_size 从 256 改小（如 64 或 128）
 train_iter = DataLoader(train_dataset, batch_size=256, shuffle=True, num_workers=4)
 test_iter = DataLoader(test_dataset, batch_size=256, shuffle=False, num_workers=4)
 
-# 提示：因为网络变深变大、数据尺寸变大，学习率 lr 建议比 LeNet 调小一点（比如 0.01 ~ 0.1 左右），这里设为 0.01 方便稳定收敛
 lr, num_epochs = 0.01, 10
 
 train_ch6(net, train_iter, test_iter, num_epochs, lr, d2l.try_gpu())

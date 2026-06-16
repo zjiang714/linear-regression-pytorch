@@ -6,24 +6,17 @@ from d2l import torch as d2l
 
 # 编码器
 class Seq2SeqEncoder(d2l.Encoder):
-    """用于序列到序列学习的循环神经网络编码器"""
     def __init__(self, vocab_size, embed_size, num_hiddens, num_layers,
                  dropout=0, **kwargs):
         super(Seq2SeqEncoder, self).__init__(**kwargs)
-        # 嵌入层
         self.embedding = nn.Embedding(vocab_size, embed_size)
         self.rnn = nn.GRU(embed_size, num_hiddens, num_layers,
                           dropout=dropout)
 
     def forward(self, X, *args):
-        # 输出'X'的形状：(batch_size,num_steps,embed_size)
         X = self.embedding(X)
-        # 在循环神经网络模型中，第一个轴对应于时间步
         X = X.permute(1, 0, 2)
-        # 如果未提及状态，则默认为0
         output, state = self.rnn(X)
-        # output的形状:(num_steps,batch_size,num_hiddens)
-        # state的形状:(num_layers,batch_size,num_hiddens)
         return output, state
 
 encoder = Seq2SeqEncoder(vocab_size=10, embed_size=8, num_hiddens=16,
@@ -35,7 +28,6 @@ output.shape
 
 #解码器
 class Seq2SeqDecoder(d2l.Decoder):
-    """用于序列到序列学习的循环神经网络解码器"""
     def __init__(self, vocab_size, embed_size, num_hiddens, num_layers,
                  dropout=0, **kwargs):
         super(Seq2SeqDecoder, self).__init__(**kwargs)
@@ -48,18 +40,13 @@ class Seq2SeqDecoder(d2l.Decoder):
         return enc_outputs[1]
 
     def forward(self, X, state):
-        # 输出'X'的形状：(batch_size,num_steps,embed_size)
         X = self.embedding(X).permute(1, 0, 2)
-        # 广播context，使其具有与X相同的num_steps
         context = state[-1].repeat(X.shape[0], 1, 1)
         X_and_context = torch.cat((X, context), 2)
         output, state = self.rnn(X_and_context, state)
         output = self.dense(output).permute(1, 0, 2)
-        # output的形状:(batch_size,num_steps,vocab_size)
-        # state的形状:(num_layers,batch_size,num_hiddens)
         return output, state
 
-# 实例化Seq2SeqEncoder
 encoder = Seq2SeqEncoder(vocab_size=10, embed_size=8, num_hiddens=16,
                          num_layers=2)
 encoder.eval()
@@ -71,7 +58,6 @@ state.shape
 
 
 class Seq2SeqDecoder(d2l.Decoder):
-    """用于序列到序列学习的循环神经网络解码器"""
     def __init__(self, vocab_size, embed_size, num_hiddens, num_layers,
                  dropout=0, **kwargs):
         super(Seq2SeqDecoder, self).__init__(**kwargs)
@@ -84,18 +70,14 @@ class Seq2SeqDecoder(d2l.Decoder):
         return enc_outputs[1]
 
     def forward(self, X, state):
-        # 输出'X'的形状：(batch_size,num_steps,embed_size)
         X = self.embedding(X).permute(1, 0, 2)
-        # 广播context，使其具有与X相同的num_steps
         context = state[-1].repeat(X.shape[0], 1, 1)
         X_and_context = torch.cat((X, context), 2)
         output, state = self.rnn(X_and_context, state)
         output = self.dense(output).permute(1, 0, 2)
-        # output的形状:(batch_size,num_steps,vocab_size)
-        # state的形状:(num_layers,batch_size,num_hiddens)
         return output, state
 
-# 实例化解码器
+
 decoder = Seq2SeqDecoder(vocab_size=10, embed_size=8, num_hiddens=16,
                          num_layers=2)
 decoder.eval()
@@ -120,12 +102,8 @@ X = torch.ones(2, 3, 4)
 sequence_mask(X, torch.tensor([1, 2]), value=-1)
 
 
-#@save
 class MaskedSoftmaxCELoss(nn.CrossEntropyLoss):
-    """带遮蔽的softmax交叉熵损失函数"""
-    # pred的形状：(batch_size,num_steps,vocab_size)
-    # label的形状：(batch_size,num_steps)
-    # valid_len的形状：(batch_size,)
+
     def forward(self, pred, label, valid_len):
         weights = torch.ones_like(label)
         weights = sequence_mask(weights, valid_len)
@@ -141,9 +119,8 @@ loss(torch.ones(3, 4, 10), torch.ones((3, 4), dtype=torch.long),
 
 
 
-#@save
+
 def train_seq2seq(net, data_iter, lr, num_epochs, tgt_vocab, device):
-    """训练序列到序列模型"""
     def xavier_init_weights(m):
         if type(m) == nn.Linear:
             nn.init.xavier_uniform_(m.weight)
@@ -167,7 +144,7 @@ def train_seq2seq(net, data_iter, lr, num_epochs, tgt_vocab, device):
             X, X_valid_len, Y, Y_valid_len = [x.to(device) for x in batch]
             bos = torch.tensor([tgt_vocab['<bos>']] * Y.shape[0],
                           device=device).reshape(-1, 1)
-            dec_input = torch.cat([bos, Y[:, :-1]], 1)  # 强制教学
+            dec_input = torch.cat([bos, Y[:, :-1]], 1)  
             Y_hat, _ = net(X, dec_input, X_valid_len)
             l = loss(Y_hat, Y, Y_valid_len)
             l.sum().backward()      # 损失函数的标量进行“反向传播”
