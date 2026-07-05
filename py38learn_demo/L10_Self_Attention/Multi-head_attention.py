@@ -65,9 +65,29 @@ X = torch.ones((batch_size, num_queries, num_hiddens))
 Y = torch.ones((batch_size, num_kvpairs, num_hiddens))
 attention(X, Y, Y, valid_lens).shape
 
+
+# vocab_size：表示模型能够认识的词元（Token）总数
 # batch_size：表示一次解读几个句子
 # num_queries：表示的是需要关注的词、主动提问的词个数有多少
 # num_kvpairs：表示的是这个句子的词有多少
 # valid_lens：表示主动提问的词，只能看“背景句子”的前几个词！
 # attention为什么传两个Y？因为要同时充当key和value，然后再找相似度进行匹配。
 
+"""
+多头注意力的使用代码,
+多头注意力、EncoderBlock、AddNorm 全都被封装在 BertForSequenceClassification 内部了.
+from transformers import BertForSequenceClassification, BertTokenizer
+import torch
+
+# 1. 直接加载官方预训练好的 BERT 骨架和分类头（比如情感分析 2 分类）
+model = BertForSequenceClassification.from_pretrained('bert-base-chinese', num_labels=2)
+tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
+
+# 2. 准备你的输入数据
+text = "这个汽车大灯的质量非常好，亮度很够！"
+inputs = tokenizer(text, return_tensors="pt")
+
+# 3. 喂给模型，直接拿到分类结果
+outputs = model(**inputs)
+logits = outputs.logits
+"""
