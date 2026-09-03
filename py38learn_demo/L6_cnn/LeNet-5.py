@@ -15,7 +15,7 @@ class LeNet5(nn.Module):
         self.conv1 = nn.Conv2d(1, 6, kernel_size=5, padding=2)   # (1,28,28) → (6,28,28)
         self.pool1 = nn.AvgPool2d(kernel_size=2, stride=2)       # 池化（汇聚层）：下采样，降低分辨率、减少计算量
         self.conv2 = nn.Conv2d(6, 16, kernel_size=5)             # (6,14,14) → (16,10,10)
-        self.pool2 = nn.AvgPool2d(kernel_size=2, stride=2)       # (16,10,10) → (16,5,5)
+        self.pool2 = nn.AvgPool2d(kernel_size=2, stride=2)        # (16,10,10) → (16,5,5)
         # ---- 全连接分类块：将特征映射到类别 ----
         self.flatten = nn.Flatten()                              # 16*5*5 = 400 展平为一维向量
         self.fc1 = nn.Linear(16 * 5 * 5, 120)                    # 400 → 120  全连接1
